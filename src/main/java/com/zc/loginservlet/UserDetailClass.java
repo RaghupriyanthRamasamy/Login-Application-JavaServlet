@@ -1,0 +1,184 @@
+package com.zc.loginservlet;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
+import javax.sql.DataSource;
+
+//import com.zc.databaseconnectivity.DatabaseConnectivity;
+import com.zc.hashgenerator.HashGenerator;
+
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+
+public class UserDetailClass {
+	
+	public static final String[] HEADERS_TO_TRY = { "X-Forwarded-For", "Proxy-Client-IP", "WL-Proxy-Client-IP",
+			"HTTP_X_FORWARDED_FOR", "HTTP_X_FORWARDED", "HTTP_X_CLUSTER_CLIENT_IP", "HTTP_CLIENT_IP",
+			"HTTP_FORWARDED_FOR", "HTTP_FORWARDED", "HTTP_VIA", "REMOTE_ADDR" };
+	
+	boolean emailStatus = false;
+	boolean passStatus = false;
+
+	private DataSource dataSource;
+	private Connection con;
+	
+	public void init() throws ServletException {
+		try {
+			Context initContext  = new InitialContext();
+			Context envContext  = (Context)initContext.lookup("java:/comp/env");
+			dataSource = (DataSource)envContext.lookup("jdbc/usercredentialsDB");
+		} catch (NamingException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	// Validate user email present in database or not
+	public boolean EmailValidate(String useremail) throws ServletException {
+		init();
+		try {
+			con = dataSource.getConnection();
+			String emailCheckQuery ="SELECT * from useremail WHERE user_email = ?";
+			
+			PreparedStatement ps = con.prepareStatement(emailCheckQuery);
+			ps.setString(1, useremail);
+			ResultSet rs = ps.executeQuery();
+			emailStatus = rs.next();
+			
+			ps.close();
+			con.close();
+		} catch (Exception e) {
+			System.out.println("EmailValidate"+e.getMessage());
+		}
+		return emailStatus;
+	}
+	
+	// validate password entered by user is correct or not
+	public boolean PasswordValidate(String useremail, String password) throws ServletException {
+		init();
+		try {
+
+			con = dataSource.getConnection();
+			String getUserIDQuery = "SELECT user_id from useremail WHERE user_email = ?";
+			PreparedStatement ps = con.prepareStatement(getUserIDQuery);
+			ps.setString(1, useremail);
+			ResultSet rs = ps.executeQuery();
+			
+			String user_id = null;
+			if(rs.next()) {
+				user_id = rs.getString(1);
+			}
+			
+			String getByteQuery ="SELECT bytesalt from userdetail WHERE user_id = ?";
+			String hashpass = null;
+			
+			ps = con.prepareStatement(getByteQuery);
+			ps.setString(1, user_id);
+			rs = ps.executeQuery();
+			
+			if(rs.next()) {
+				byte[] salt = rs.getBytes(1);
+				HashGenerator hg = new HashGenerator();
+				hashpass = hg.generateHash(password, salt);
+			}
+			
+			String validate ="SELECT * from userdetail WHERE user_id = ? and password = ?";
+			
+			ps = con.prepareStatement(validate);
+			ps.setString(1, user_id);
+			ps.setString(2, hashpass);
+
+			rs = ps.executeQuery();
+			passStatus = rs.next();
+			
+			ps.close();
+			con.close();
+		} catch (Exception e) {
+			System.out.println("PasswordValidate"+e.getMessage());
+		}
+		return passStatus;
+	}
+	
+	// ADD new session into database
+	public boolean AddSession(String sessionId, String email) throws ServletException {
+		boolean sessionStatus = true;
+		init();
+		try {
+
+			con = dataSource.getConnection();
+			String id = null;
+			
+			String getUserIDQuery = "SELECT user_id from useremail WHERE user_email = ?";
+			PreparedStatement ps = con.prepareStatement(getUserIDQuery);
+			ps.setString(1, email);
+			ResultSet rs = ps.executeQuery();
+			if(rs.next()) {
+				id = rs.getString(1);
+			}
+			
+			String setSession = "insert into usersession (user_id,session) values(?,?)";
+			ps = con.prepareStatement(setSession);
+			ps.setString(1, id);
+			ps.setString(2, sessionId);
+			ps.executeUpdate();
+			ps.close();
+			con.close();
+		} catch (Exception e) {
+			sessionStatus = false;
+			System.out.println("In Add Session Method "+ e.getMessage());
+		}
+		return sessionStatus;
+	}
+	
+	// Fetch user id from database using session id from cookie
+	public String GetUserId(Cookie[] cookies) throws ServletException {
+		init();
+		String sessionValue = null;
+		if(cookies != null) {
+			for(Cookie cookie : cookies) {
+				if((cookie.getName()).compareTo("_Session_ID") == 0) {
+					sessionValue = cookie.getValue();
+				}
+			}
+		}
+		
+		String getid = "SELECT user_id from usersession WHERE session = ?";
+		String user_id = null;
+		try {
+			con = dataSource.getConnection();
+			PreparedStatement ps = con.prepareStatement(getid);
+			ps.setString(1, sessionValue);
+			ResultSet rs = ps.executeQuery();
+			if(rs.next()) {
+				user_id = rs.getString(1);
+			}
+			ps.close();
+			con.close();
+		} 
+		catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return user_id;
+	}
+	
+	// Finding User IP address from request
+	
+	public String UserIP(HttpServletRequest request) {
+		for (String header : HEADERS_TO_TRY) {
+			String ip = request.getHeader(header);
+			if (ip != null && ip.length() != 0 && !"unknown".equalsIgnoreCase(ip)) {
+				return ip;
+			}
+		}
+	  return request.getRemoteAddr(); 
+	}
+	
+}
+
+//String getbyte = "select bytesalt from usercredentials.userdetail where ? IN(email, secemail1, secemail2, secemail3);";
