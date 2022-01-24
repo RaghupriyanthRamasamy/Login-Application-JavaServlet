@@ -45,3 +45,7 @@ pom.xml.versionsBackup
 pom.xml.next
 release.properties
 dependency-reduced-pom.xml
+
+#own
+/src/main/webapp/META-INF/context.xml
+/src/main/webapp/META-INF/MANIFEST.MF
