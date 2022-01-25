@@ -2,13 +2,19 @@ package com.zc.passwordvalidateservlet;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+
+import javax.mail.MessagingException;
+
 import com.zc.loginservlet.UserDetailClass;
+import com.zc.sendemailotp.SendEmailOTP;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
+import org.json.simple.JSONObject;
 
 /**
  * Servlet implementation class PasswordValidateServlet
@@ -21,23 +27,33 @@ public class PasswordValidateServlet extends HttpServlet {
 
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {}
 
+	@SuppressWarnings("unchecked")
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		response.setContentType("application/json");
 		
 		String useremail = request.getParameter("useremail");
 		String password = request.getParameter("Password");
 		
 		PrintWriter out = response.getWriter();
 		
-		boolean Status = false;
+		JSONObject result = new JSONObject();
 		
 		UserDetailClass evc = new UserDetailClass();
 		
-		Status = evc.PasswordValidate(useremail, password);
-		
-		if(Status)
-			out.println("true");
-		else
-			out.println("false");
+		if(evc.PasswordValidate(useremail, password)) {
+			SendEmailOTP seo = new SendEmailOTP();
+			try {
+				result = seo.sendEmailOTP(useremail);
+			} catch (ServletException | MessagingException e) {
+				result.put("ServerError", true);
+				e.printStackTrace();
+			}
+			out.println(result);
+		}
+		else {
+			result.put("mfapassed", false);
+			out.println(result);
+		}
 	}
 
 }
