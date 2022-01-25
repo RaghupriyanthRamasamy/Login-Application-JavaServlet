@@ -1,5 +1,5 @@
 $(document).ready(function () {
-  var email;
+  let email, sessionInfo;
   $("#next").click(function () {
     email = $("#userName").val();
     if ($("#userName").val() == null || $("#userName").val() == "") {
@@ -38,11 +38,15 @@ $(document).ready(function () {
     $("#userName").css("border", "");
   });
 
+  const passwordResult = message => {
+    $("#pass-result").html(message).css("color", "red");
+    $("#pass1").css("border", "2px solid #d90429");
+  };
+
   $("#btnsubmit").click(function () {
     const password = $("#pass1").val();
     if (password == null || password == "") {
-      $("#pass-result").html("Please Enter your password").css("color", "red");
-      $("#pass1").css("border", "2px solid #e63946");
+      passwordResult("Please Enter your password");
     } else {
       $.ajax({
         type: "POST",
@@ -50,15 +54,19 @@ $(document).ready(function () {
         url: "passwordvalidate",
         async: false,
         success: function (value) {
-          if ($.trim(value) == "true") {
-            $("#form").submit();
-            console.log("inside pass if");
-          }
-          if ($.trim(value) == "false") {
-            $("#pass-result")
-              .html("Incorrect password. Please try again.")
-              .css("color", "red");
-            $("pass1").css("border", "2px solid #d90429");
+          console.log(value);
+          if (value.ServerError === true) {
+            passwordResult(
+              "Problem in our end Well will rectify it soon. Kindly try after sometime"
+            );
+          } else if (value.mfapassed === false) {
+            passwordResult("Incorrect password. Please try again.");
+          } else {
+            sessionInfo = value.otpSessionInfo;
+            $("#user_container").addClass("hidden");
+            $(".otp_container").removeClass("hidden");
+            $(".otp_container").addClass("show");
+            console.log("Inside Pass else");
           }
         },
       });
@@ -67,8 +75,61 @@ $(document).ready(function () {
 
   $("#pass1").focus(function () {
     $("#pass-result").html("");
-    $("pass1").css("border", "");
+    $("pass1").css("border", "2px solid #1f52f9");
   });
+
+  const otpResult = message => {
+    $("#otp_error").html(message);
+  };
+
+  const loginCall = () => {
+    // $("#form").submit();
+    $.ajax({
+      type: "POST",
+      data: { email: email },
+      url: "loginservlet",
+      async: false,
+      success: function (value) {
+        console.log("Inside login call success", value);
+        window.location.replace(
+          "http://localhost:8080/Session_Tracking/profile"
+        );
+        // if ($.trim(value) == "true") {
+        //   console.log("inside login call if");
+        //   window.location.replace(
+        //     "http://localhost:8080/Session_Tracking/profile"
+        //   );
+        // } else {
+        //   alert("Something Went wrong");
+        // }
+      },
+    });
+  };
+
+  $("#verify_otp").click(() => {
+    const otp = $("#otp-input").val();
+    if ($.trim(otp) == null || $.trim(otp) === "") otpResult("Enter your OTP");
+    else if ($.trim(otp).length != 6) otpResult("Invalid OTP");
+    else if (otp.match(/^[0-9]+$/) == null) otpResult("Invalid OTP");
+    else {
+      $.ajax({
+        type: "POST",
+        data: { useremail: email, otp: otp, sessionInfo: sessionInfo },
+        url: "otpvalidation",
+        async: false,
+        success: function (value) {
+          console.log("In verify otp", value);
+          if ($.trim(value) == "true") {
+            loginCall();
+          } else {
+            otpResult("Invalid OTP");
+          }
+        },
+      });
+    }
+  });
+
+  $("#otp-input").focus(() => $("#otp_error").html(""));
 });
 
 document.getElementById("eye").onclick = show;
