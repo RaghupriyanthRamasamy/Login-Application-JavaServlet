@@ -49,3 +49,4 @@ dependency-reduced-pom.xml
 #own
 /src/main/webapp/META-INF/context.xml
 /src/main/webapp/META-INF/MANIFEST.MF
+/src/main/java/com/zc/credentialsVault/EmailCredentialsVault.java
