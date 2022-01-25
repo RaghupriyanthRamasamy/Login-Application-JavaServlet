@@ -20,7 +20,7 @@ pageEncoding="ISO-8859-1"%>
     response.sendRedirect("profile"); } } } catch(Exception e){
     response.sendRedirect("login"); } %>
 
-    <div class="form">
+    <div id="user_container" class="form">
       <form class="" action="loginservlet" method="post" id="form">
         <div class="head">
           <img src="logo.png" alt="logo" class="logo" />
@@ -76,6 +76,39 @@ pageEncoding="ISO-8859-1"%>
           </div>
         </div>
       </form>
+    </div>
+
+    <!-- Otp container code -->
+
+    <div class="otp_container hidden">
+      <div>
+        <h2>OTP Verification</h2>
+      </div>
+
+      <div class="otp_h3">
+        <h3>
+          We've sent a verification code to your email - Enter the code to
+          signin
+        </h3>
+      </div>
+      <input
+        type="text"
+        name="otp"
+        id="otp-input"
+        placeholder="Enter 6-Digit Code"
+        autofocus
+        required
+      />
+      <div class="otp_error">
+        <span id="otp_error"></span>
+      </div>
+      <button type="button" id="resend_otp" class="otp_buttons">
+        Resend OTP
+      </button>
+      <button type="submit" id="cancel_otp" class="otp_buttons">Cancel</button>
+      <button type="button" id="verify_otp" class="otp_buttons">
+        Verify OTP
+      </button>
     </div>
 
     <script src="./login.js"></script>
