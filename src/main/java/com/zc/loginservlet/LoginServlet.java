@@ -1,6 +1,7 @@
 package com.zc.loginservlet;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 
 //import com.zc.accessvariables.Get_Location_From_IP;
 //import com.zc.accessvariables.Location_Use_Bean;
@@ -32,7 +33,7 @@ public class LoginServlet extends HttpServlet {
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 //		UserAgentStringParser parser = UADetectorServiceFactory.getOnlineUpdatingParser();
 		String useremail = request.getParameter("email");
-		String password = request.getParameter("Password");
+//		String password = request.getParameter("Password");
 		
 		UserAgentStringParser parser = UADetectorServiceFactory.getResourceModuleParser();
 
@@ -46,14 +47,14 @@ public class LoginServlet extends HttpServlet {
         System.out.println("\nDevice: " + device.getName());
         
 		boolean emailStatus = false;
-		boolean passStatus = false;
+		boolean passStatus = true;
 		
 		UserDetailClass uvc = new UserDetailClass();
 		
 //		String ip = uvc.UserIP(request);
 		
 		emailStatus = uvc.EmailValidate(useremail);
-		passStatus = uvc.PasswordValidate(useremail, password);
+//		passStatus = uvc.PasswordValidate(useremail, password);
 		
 		if(emailStatus && passStatus) {
 			
@@ -68,6 +69,8 @@ public class LoginServlet extends HttpServlet {
 				cookie.setHttpOnly(true);
 				response.addCookie(cookie);
 				response.sendRedirect("profile");
+				PrintWriter out = response.getWriter();
+				out.println("true");
 			}
 //			System.out.println(java.time.LocalDateTime.now().toString());
 		}
