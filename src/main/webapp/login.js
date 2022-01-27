@@ -139,6 +139,14 @@ $(document).ready(function () {
   });
 
   $("#otp-input").focus(() => $("#otp_error").html(""));
+
+  $("#cancel_otp").click(() =>
+    window.location.replace("http://localhost:8080/Session_Tracking/login")
+  );
+
+  $("resend_otp").click(() =>
+    alert("This option is not enabled. Refresh this window")
+  );
 });
 
 document.getElementById("eye").onclick = show;
