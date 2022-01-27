@@ -24,7 +24,7 @@ public class EmailUtility {
 		message += "<h2>%s</h2>";
 		message += "If you didn't initiate this action or if you think you received this email by mistake, please contact";
 		message += "<a href='support@localhost.com'>support@localhost.com</a>";
-		message += "<p>Kind Regards,</p><br><p>Localhost Testing Team</p>";
+		message += "<p>Kind Regards,</p><p>Localhost Testing Team</p>";
 		
 		message = String.format(message, username, otp);
 		
