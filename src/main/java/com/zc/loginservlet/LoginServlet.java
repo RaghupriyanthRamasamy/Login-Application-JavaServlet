@@ -20,6 +20,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import net.sf.uadetector.*;
 import net.sf.uadetector.service.UADetectorServiceFactory;
 
+import org.json.simple.JSONObject;
 
 /**
  * Servlet implementation class LoginServlet
@@ -27,81 +28,90 @@ import net.sf.uadetector.service.UADetectorServiceFactory;
 @WebServlet("/loginservlet")
 public class LoginServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
-    public LoginServlet() {}
-	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {}
-	
-	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-//		UserAgentStringParser parser = UADetectorServiceFactory.getOnlineUpdatingParser();
+
+	public LoginServlet() {}
+
+	protected void doGet(HttpServletRequest request, HttpServletResponse response)
+			throws ServletException, IOException {}
+
+	@SuppressWarnings("unchecked")
+	protected void doPost(HttpServletRequest request, HttpServletResponse response)
+			throws ServletException, IOException {
+
+		response.setContentType("application/json");
 		String useremail = request.getParameter("email");
-//		String password = request.getParameter("Password");
-		
+		String authInfo = request.getParameter("authCredential");
+
 		UserAgentStringParser parser = UADetectorServiceFactory.getResourceModuleParser();
 
 		ReadableUserAgent agent = parser.parse(request.getHeader("User-Agent"));
 		System.out.println("Browser type: " + agent.getType().getName());
-        System.out.println("Browser name: " + agent.getName());
-        
-        OperatingSystem os = agent.getOperatingSystem();
-        System.out.println("\nOS Name: " + os.getName());
-        ReadableDeviceCategory device = agent.getDeviceCategory();
-        System.out.println("\nDevice: " + device.getName());
-        
-		boolean emailStatus = false;
-		boolean passStatus = true;
-		
+		System.out.println("Browser name: " + agent.getName());
+
+		OperatingSystem os = agent.getOperatingSystem();
+		System.out.println("\nOS Name: " + os.getName());
+		ReadableDeviceCategory device = agent.getDeviceCategory();
+		System.out.println("\nDevice: " + device.getName());
+
 		UserDetailClass uvc = new UserDetailClass();
-		
-//		String ip = uvc.UserIP(request);
-		
-		emailStatus = uvc.EmailValidate(useremail);
-//		passStatus = uvc.PasswordValidate(useremail, password);
-		
-		if(emailStatus && passStatus) {
-			
+
+		PrintWriter out = response.getWriter();
+		JSONObject result = new JSONObject();
+
+		boolean loginStatus = uvc.loginAuthValidation(useremail, authInfo);
+
+		if (loginStatus) {
+
 			RandomSessionIdGenerator rsid = new RandomSessionIdGenerator();
 			String sessionID = rsid.RandomSessionId();
-			
-			if(uvc.AddSession(sessionID, useremail))
-			{
+
+			if (uvc.AddSession(sessionID, useremail)) {
 				Cookie cookie = new Cookie("_Session_ID", sessionID);
-				cookie.setMaxAge( 60 * 60 );
+				cookie.setMaxAge(60 * 60);
 				cookie.setSecure(true);
 				cookie.setHttpOnly(true);
 				response.addCookie(cookie);
-				response.sendRedirect("profile");
-				PrintWriter out = response.getWriter();
-				out.println("true");
+				result.put("status", true);
+				out.println(result);
+			} else {
+				result.put("status", false);
+				out.println(result);
 			}
-//			System.out.println(java.time.LocalDateTime.now().toString());
+		} else {
+			result.put("status", false);
+			out.println(result);
 		}
-		else
-			response.sendRedirect("login");
 	}
-
-//	System.out.println("Gateway: "+request.getHeader("VIA"));
-//	System.out.println("Remote Port: "+request.getRemotePort());
-//	System.out.println("Remote User: "+request.getRemoteUser());
-	
-//	UserAgent userAgent = UserAgent.parseUserAgentString(request.getHeader("User-Agent"));
-//	UserAgent userAgent = UserAgent.parseUserAgentString(request.getHeader("User-Agent"));
-//  OperatingSystem agent = userAgent.getOperatingSystem();
-	
-//  System.out.println("User Agent"+userAgent);
-//  System.out.println("Browser type: "+ userAgent.getBrowser());
-//  System.out.println("OS type "+agent.getName());
-//  System.out.println("Device Type "+agent.getDeviceType().getName());
-	
-//  String ip = request.getRemoteAddr();
-//  Get_Location_From_IP obj_Get_Location_From_IP = new Get_Location_From_IP();
-//  Location_Use_Bean obj_Location_Use_Bean = obj_Get_Location_From_IP.get_ip_Details(ip);
-//  System.out.println("IP Address--" + obj_Location_Use_Bean.getIp_address());
-//  System.out.println("Country Code-- " + obj_Location_Use_Bean.getIp_address());
-//  System.out.println("Country--" + obj_Location_Use_Bean.getCountry());
-//  System.out.println("State--" + obj_Location_Use_Bean.getState());
-//  System.out.println("City--" + obj_Location_Use_Bean.getCity());
-//  System.out.println("ZIP--" + obj_Location_Use_Bean.getZip());
-//  System.out.println("Lat--" + obj_Location_Use_Bean.getLat());
-//  System.out.println("Lon--" + obj_Location_Use_Bean.getLon());
-//  System.out.println("Offset--" + obj_Location_Use_Bean.getUtc_offset());
-
 }
+
+//UserAgentStringParser parser = UADetectorServiceFactory.getOnlineUpdatingParser();
+//String ip = uvc.UserIP(request);
+//boolean passStatus = uvc.PasswordValidate(useremail, password);
+//boolean emailStatus = uvc.EmailValidate(useremail);	
+//System.out.println(java.time.LocalDateTime.now().toString());
+//response.sendRedirect("profile");
+//System.out.println("Gateway: "+request.getHeader("VIA"));
+//System.out.println("Remote Port: "+request.getRemotePort());
+//System.out.println("Remote User: "+request.getRemoteUser());
+
+//UserAgent userAgent = UserAgent.parseUserAgentString(request.getHeader("User-Agent"));
+//UserAgent userAgent = UserAgent.parseUserAgentString(request.getHeader("User-Agent"));
+//OperatingSystem agent = userAgent.getOperatingSystem();
+
+//System.out.println("User Agent"+userAgent);
+//System.out.println("Browser type: "+ userAgent.getBrowser());
+//System.out.println("OS type "+agent.getName());
+//System.out.println("Device Type "+agent.getDeviceType().getName());
+
+//String ip = request.getRemoteAddr();
+//Get_Location_From_IP obj_Get_Location_From_IP = new Get_Location_From_IP();
+//Location_Use_Bean obj_Location_Use_Bean = obj_Get_Location_From_IP.get_ip_Details(ip);
+//System.out.println("IP Address--" + obj_Location_Use_Bean.getIp_address());
+//System.out.println("Country Code-- " + obj_Location_Use_Bean.getIp_address());
+//System.out.println("Country--" + obj_Location_Use_Bean.getCountry());
+//System.out.println("State--" + obj_Location_Use_Bean.getState());
+//System.out.println("City--" + obj_Location_Use_Bean.getCity());
+//System.out.println("ZIP--" + obj_Location_Use_Bean.getZip());
+//System.out.println("Lat--" + obj_Location_Use_Bean.getLat());
+//System.out.println("Lon--" + obj_Location_Use_Bean.getLon());
+//System.out.println("Offset--" + obj_Location_Use_Bean.getUtc_offset());
