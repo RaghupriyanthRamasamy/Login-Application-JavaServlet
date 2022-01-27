@@ -68,7 +68,6 @@ pageEncoding="ISO-8859-1"%>
             </div>
             <div class="fub">
               <a href="">Forget Password?</a>
-              <!-- <input type="button" value="Submit"> -->
               <button id="btnsubmit" class="submit" type="button">
                 Submit
               </button>
@@ -80,7 +79,7 @@ pageEncoding="ISO-8859-1"%>
 
     <!-- Otp container code -->
 
-    <div class="otp_container hidden">
+    <div id="otp_container" class="otp_container hidden">
       <div>
         <h2>OTP Verification</h2>
       </div>
@@ -99,7 +98,7 @@ pageEncoding="ISO-8859-1"%>
         autofocus
         required
       />
-      <div class="otp_error">
+      <div id="otp_error_space" class="otp_error">
         <span id="otp_error"></span>
       </div>
       <button type="button" id="resend_otp" class="otp_buttons">
@@ -109,6 +108,10 @@ pageEncoding="ISO-8859-1"%>
       <button type="button" id="verify_otp" class="otp_buttons">
         Verify OTP
       </button>
+    </div>
+
+    <div id="loader_container" class="hidden">
+      <div class=".loader"></div>
     </div>
 
     <script src="./login.js"></script>
