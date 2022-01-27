@@ -39,15 +39,23 @@ $(document).ready(function () {
   });
 
   const passwordResult = message => {
+    $("#user_container").removeClass("hidden");
+    $("#user_container").addClass("show");
+    $("#loader_container").removeClass("show");
+    $("#loader_container").addClass("hidden");
     $("#pass-result").html(message).css("color", "red");
     $("#pass1").css("border", "2px solid #d90429");
   };
 
   $("#btnsubmit").click(function () {
     const password = $("#pass1").val();
-    if (password == null || password == "") {
+    if ($.trim(password) == null || $.trim(password) == "") {
       passwordResult("Please Enter your password");
     } else {
+      $("#user_container").addClass("hidden");
+      $("#loader_container").removeClass("hidden");
+      $("#loader_container").addClass("show");
+      console.log("pasword else");
       $.ajax({
         type: "POST",
         data: { Password: password, useremail: email },
@@ -57,15 +65,17 @@ $(document).ready(function () {
           console.log(value);
           if (value.ServerError === true) {
             passwordResult(
-              "Problem in our end Well will rectify it soon. Kindly try after sometime"
+              "Problem in our end We will rectify it soon. Kindly try after sometime"
             );
           } else if (value.mfapassed === false) {
             passwordResult("Incorrect password. Please try again.");
           } else {
             sessionInfo = value.otpSessionInfo;
+            $("#loader_container").removeClass("show");
+            $("#loader_container").addClass("hidden");
             $("#user_container").addClass("hidden");
-            $(".otp_container").removeClass("hidden");
-            $(".otp_container").addClass("show");
+            $("#otp_container").removeClass("hidden");
+            $("#otp_container").addClass("show");
             console.log("Inside Pass else");
           }
         },
@@ -82,26 +92,23 @@ $(document).ready(function () {
     $("#otp_error").html(message);
   };
 
-  const loginCall = () => {
-    // $("#form").submit();
+  const loginCall = (email, authCredential) => {
     $.ajax({
       type: "POST",
-      data: { email: email },
+      data: { email, authCredential },
       url: "loginservlet",
       async: false,
       success: function (value) {
         console.log("Inside login call success", value);
-        window.location.replace(
-          "http://localhost:8080/Session_Tracking/profile"
-        );
-        // if ($.trim(value) == "true") {
-        //   console.log("inside login call if");
-        //   window.location.replace(
-        //     "http://localhost:8080/Session_Tracking/profile"
-        //   );
-        // } else {
-        //   alert("Something Went wrong");
-        // }
+        if (value.status === true) {
+          console.log("inside logincall if");
+          window.location.href =
+            "http://localhost:8080/Session_Tracking/profile";
+        } else if (value.status === false) {
+          otpResult(
+            "Problem in our end We will rectify it soon. Kindly try after sometime"
+          );
+        }
       },
     });
   };
@@ -119,11 +126,13 @@ $(document).ready(function () {
         async: false,
         success: function (value) {
           console.log("In verify otp", value);
-          if ($.trim(value) == "true") {
-            loginCall();
-          } else {
-            otpResult("Invalid OTP");
-          }
+          if (value.serverError === true)
+            otpResult(
+              "Problem in our end We will rectify it soon. Kindly try after sometime"
+            );
+          else if (value.validOTP === true)
+            loginCall(value.email, value.authCredential);
+          else otpResult("Invalid OTP");
         },
       });
     }
@@ -148,3 +157,8 @@ function show() {
     image.setAttribute("src", "eyehide.png");
   }
 }
+
+// window.location.replace(
+//   "http://localhost:8080/Session_Tracking/profile"
+// );
+// $("#form").submit();
