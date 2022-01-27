@@ -12,10 +12,12 @@ import javax.sql.DataSource;
 
 //import com.zc.databaseconnectivity.DatabaseConnectivity;
 import com.zc.hashgenerator.HashGenerator;
+import com.zc.mfacredentials.SessionInfoGenerator;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import org.json.simple.JSONObject;
 
 public class UserDetailClass {
 
@@ -216,12 +218,13 @@ public class UserDetailClass {
 		init();
 		try {
 			con = dataSource.getConnection();
-			String setUserOTPQuery = "insert into usermfa(user_id, otp, otp_session_info) value(?,?,?)";
+			String setUserOTPQuery = "insert into usermfa(user_id, otp, otp_session_info, auth_info) value(?,?,?,?)";
 			PreparedStatement ps = con.prepareStatement(setUserOTPQuery);
 
 			ps.setString(1, user_id);
 			ps.setString(2, otp);
 			ps.setString(3, session_info);
+			ps.setString(4, "notSignin");
 			ps.executeUpdate();
 			ps.close();
 			con.close();
@@ -232,36 +235,80 @@ public class UserDetailClass {
 		return true;
 	}
 
-	public boolean userOTPValidation(String useremail, String otp, String sessionInfo) throws ServletException {
+	@SuppressWarnings("unchecked")
+	public JSONObject userOTPValidation(String useremail, String otp, String sessionInfo) throws ServletException {
 
 		init();
-		boolean otpStatus = true;
+		JSONObject otpStatus = new JSONObject();
 		String user_id = GetUserId(useremail);
-		
+
 		try {
 			con = dataSource.getConnection();
-			String otpValidationQuery = "SELECT * from usermfa WHERE user_id = ? and otp = ? and otp_session_info = ?";
-		
+			String otpValidationQuery = "SELECT * from usermfa WHERE user_id = ? and otp = ? and otp_session_info = ? and auth_info = ?";
+
 			PreparedStatement ps = con.prepareStatement(otpValidationQuery);
 			ps.setString(1, user_id);
 			ps.setString(2, otp);
 			ps.setString(3, sessionInfo);
-			
+			ps.setString(4, "notSignin");
+
 			ResultSet rs = ps.executeQuery();
-			rs = ps.executeQuery();
-			
-			otpStatus = rs.next();
+
+			if (rs.next()) {
+				SessionInfoGenerator sig = new SessionInfoGenerator();
+				String authenticationInfo = sig.generateSessionInfo(25);
+				try {
+					String setAuthInfoAuery = "update usermfa set auth_info = ? WHERE user_id = ? and otp_session_info = ?";
+					ps = con.prepareStatement(setAuthInfoAuery);
+					ps.setString(1, authenticationInfo);
+					ps.setString(2, user_id);
+					ps.setString(3, sessionInfo);
+					ps.executeUpdate();
+					otpStatus.put("validOTP", true);
+					otpStatus.put("email", useremail);
+					otpStatus.put("authCredential", authenticationInfo);
+					otpStatus.put("serverError", false);
+				} catch (Exception e) {
+					otpStatus.put("serverError", true);
+					e.printStackTrace();
+				}
+			} else {
+				otpStatus.put("validOTP", false);
+				otpStatus.put("serverError", false);
+			}
 			ps.close();
 			con.close();
-		
+
 		} catch (Exception e) {
 			e.printStackTrace();
-			otpStatus = false;
+			otpStatus.put("serverError", true);
 		}
 
 		return otpStatus;
 	}
 
+	public boolean loginAuthValidation(String email, String authInfo) throws ServletException {
+		init();
+		boolean status = false;
+		String user_id = GetUserId(email);
+		try {
+			con = dataSource.getConnection();
+			String loginAuthQuery = "SELECT * from usermfa WHERE user_id = ? and auth_info = ?";
+			PreparedStatement ps = con.prepareStatement(loginAuthQuery);
+			ps.setString(1, user_id);
+			ps.setString(2, authInfo);
+			ResultSet rs = ps.executeQuery();
+			if (rs.next()) {
+				status = true;
+			}
+			ps.close();
+			con.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return status;
+	}
+	
 	// Finding User IP address from request
 
 	public String UserIP(HttpServletRequest request) {
