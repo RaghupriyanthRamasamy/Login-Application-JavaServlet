@@ -311,7 +311,7 @@ form a {
   box-shadow: 2px 0px 2px 1px #4763ff;
 }
 
-.otp_error {
+#otp_error_space {
   padding-left: 5px;
   margin-top: 10px;
   margin-bottom: 0;
@@ -319,6 +319,48 @@ form a {
 
 #otp_error {
   color: red;
+}
+
+#loader_container {
+  background-color: #fff;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 5px;
+  height: 270px;
+  width: 435px;
+}
+
+.loader {
+  border: 16px solid #f3f3f3;
+  border-radius: 50%;
+  border-top: 16px solid blue;
+  border-right: 16px solid green;
+  border-bottom: 16px solid red;
+  border-left: 16px solid yellow;
+  width: 120px;
+  height: 120px;
+  -webkit-animation: spin 0.7s linear infinite;
+  animation: spin 0.7s linear infinite;
+}
+
+@-webkit-keyframes spin {
+  0% {
+    -webkit-transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+  }
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* .login_container{
