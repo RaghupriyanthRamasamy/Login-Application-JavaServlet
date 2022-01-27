@@ -3,8 +3,7 @@ package com.zc.mfacredentials;
 import java.security.SecureRandom;
 
 public class SessionInfoGenerator {
-	public String generateSessionInfo() {
-		int n = 20;
+	public String generateSessionInfo(int n) {
 		String AlphaNumericString = "ABCDEFGHIJKLMNOPQRSTUVWXYZ" + "0123456789" + "abcdefghijklmnopqrstuvxyz";
 		StringBuilder sb = new StringBuilder(n);
 		
