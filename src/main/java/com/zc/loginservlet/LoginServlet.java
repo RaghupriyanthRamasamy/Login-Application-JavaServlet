@@ -29,10 +29,12 @@ import org.json.simple.JSONObject;
 public class LoginServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 
-	public LoginServlet() {}
+	public LoginServlet() {
+	}
 
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
-			throws ServletException, IOException {}
+			throws ServletException, IOException {
+	}
 
 	@SuppressWarnings("unchecked")
 	protected void doPost(HttpServletRequest request, HttpServletResponse response)
@@ -65,13 +67,16 @@ public class LoginServlet extends HttpServlet {
 			RandomSessionIdGenerator rsid = new RandomSessionIdGenerator();
 			String sessionID = rsid.RandomSessionId();
 
-			if (uvc.AddSession(sessionID, useremail)) {
-				Cookie cookie = new Cookie("_Session_ID", sessionID);
-				cookie.setMaxAge(60 * 60);
-				cookie.setSecure(true);
-				cookie.setHttpOnly(true);
-				response.addCookie(cookie);
-				result.put("status", true);
+			if (uvc.removeAuthInfo(useremail, authInfo)) {
+				if (uvc.AddSession(sessionID, useremail)) {
+					Cookie cookie = new Cookie("_Session_ID", sessionID);
+					cookie.setMaxAge(60 * 60);
+					cookie.setSecure(true);
+					cookie.setHttpOnly(true);
+					response.addCookie(cookie);
+					result.put("status", true);
+				} else
+					result.put("status", false);
 				out.println(result);
 			} else {
 				result.put("status", false);
