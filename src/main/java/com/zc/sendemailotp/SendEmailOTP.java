@@ -30,7 +30,7 @@ public class SendEmailOTP {
 			OTPCodeGenerator ocg = new OTPCodeGenerator();
 			SessionInfoGenerator sig = new SessionInfoGenerator();
 			String otp = ocg.generateOTP();
-			String sessionInfo = sig.generateSessionInfo();
+			String sessionInfo = sig.generateSessionInfo(20);
 
 			try {
 				emailutility.sendEmail(ecVault.get_host(), ecVault.get_port(), ecVault.get_senderEmail(),
