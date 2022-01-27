@@ -309,6 +309,24 @@ public class UserDetailClass {
 		return status;
 	}
 	
+	public boolean removeAuthInfo(String email, String authInfo) throws ServletException {
+		init();
+		try {
+			con = dataSource.getConnection();
+			String removeAuthQuery = "DELETE FROM usermfa WHERE user_id =? and auth_info = ?";
+			PreparedStatement ps = con.prepareStatement(removeAuthQuery);
+			ps.setString(1, GetUserId(email));
+			ps.setString(2, authInfo);
+			ps.executeUpdate();
+			ps.close();
+			con.close();
+			return true;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+	
 	// Finding User IP address from request
 
 	public String UserIP(HttpServletRequest request) {
